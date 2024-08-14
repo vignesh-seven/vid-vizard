@@ -1,0 +1,55 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+.app {
+  border: 5px solid blue;
+
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app > * {
+  flex: 1;
+}
+.half {
+  /* flex-grow: 1; */
+  height: 100%;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+}
+.file-picker-div {
+  height: max-content;
+}
+.file-picker-div button {
+  padding: 20px;
+  flex-grow: 1;
+  border: 1px solid pink;
+}
+
+#file-picker-input {
+  display: none;
+}
+.file-list-div {
+  flex-grow: 1;
+}
+
+/* help visualise the layout */
+.left {
+  border: 2px solid green;
+}
+.right {
+  border: 2px solid red;
+}
+
+.file-picker-div {
+  border: 1px solid rebeccapurple;
+}
