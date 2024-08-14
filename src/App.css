@@ -28,6 +28,7 @@
 }
 .file-picker-div {
   height: max-content;
+  display: flex;
 }
 .file-picker-div button {
   padding: 20px;
