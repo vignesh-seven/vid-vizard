@@ -6,6 +6,7 @@ import FileListItem from "./components/FileListItem"
 function App() {
   const filePickerInputRef = useRef<HTMLInputElement>(null)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [highlightedFile, setHighlightedFile] = useState(0)
   //   "Dummy 1",
   //   "Dummy 2",
   // ])
@@ -18,18 +19,30 @@ function App() {
     console.log(selectedFiles)
     // console.log(filePickerInputRef.current?.value)
   }
-  function handleDeleteFile(fileName: string) {
+  function handleDeleteFile(fileName: string, index: number) {
+    if (highlightedFile == index) {
+      handleHighlightFile(-1)
+    }
     setSelectedFiles((prevFiles) =>
       prevFiles.filter((file) => file.name != fileName)
     )
   }
-
-  const fileList = selectedFiles.map((file) => {
+  function handleHighlightFile(fileIndex: number) {
+    setHighlightedFile(fileIndex)
+  }
+  const fileList = selectedFiles.map((file, index) => {
     return (
       <FileListItem
         key={file.name}
+        index={index}
         fileName={file.name}
-        onDeleteFile={() => handleDeleteFile(file.name)}
+        handleDeleteFile={() => {
+          handleDeleteFile(file.name, index)
+        }}
+        highlightedFile={highlightedFile}
+        handleHighlightFile={() => {
+          handleHighlightFile(index)
+        }}
       />
     )
   })
