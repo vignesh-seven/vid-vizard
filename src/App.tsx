@@ -5,8 +5,10 @@ import FileListItem from "./components/FileListItem"
 
 function App() {
   const filePickerInputRef = useRef<HTMLInputElement>(null)
+  const videoPlayerRef = useRef<HTMLVideoElement>(null)
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [highlightedFile, setHighlightedFile] = useState(0)
+  const [highlightedFile, setHighlightedFile] = useState(-1)
   //   "Dummy 1",
   //   "Dummy 2",
   // ])
@@ -46,6 +48,17 @@ function App() {
       />
     )
   })
+  useEffect(() => {
+    if (!videoPlayerRef.current) return
+    if (highlightedFile >= 0) {
+      videoPlayerRef.current.src = URL.createObjectURL(
+        selectedFiles[highlightedFile]
+      )
+    }
+    if (highlightedFile < 0) {
+      videoPlayerRef.current.src = ""
+    }
+  }, [highlightedFile])
 
   // logging
   useEffect(() => {
@@ -84,7 +97,10 @@ function App() {
       </div>
       <div className="right half">
         <div className="player">
-          <video src=""></video>
+          <video controls ref={videoPlayerRef}></video>
+        </div>
+        <div className="video-options">
+          <p>hi</p>
         </div>
       </div>
     </div>
