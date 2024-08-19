@@ -11,7 +11,9 @@ export default function FileListItem(props: any) {
     >
       <button
         style={
-          props.highlightedFile == props.index ? { fontWeight: "bold" } : {}
+          props.highlightedFile == props.index
+            ? { backgroundColor: "blue" }
+            : {}
         }
         onClick={props.handleHighlightFile}
         className="file-name"
@@ -20,7 +22,9 @@ export default function FileListItem(props: any) {
       </button>
       <button
         style={
-          props.highlightedFile == props.index ? { fontWeight: "bold" } : {}
+          props.highlightedFile == props.index
+            ? { backgroundColor: "blue" }
+            : {}
         }
         onClick={props.handleDeleteFile}
         className="close"

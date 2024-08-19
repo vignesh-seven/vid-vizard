@@ -67,42 +67,48 @@ function App() {
 
   return (
     <div className="app">
-      <div className="left half">
-        <div className="file-picker-div">
-          <input
-            ref={filePickerInputRef}
-            onChange={(event) => {
-              if (!event.target.files) return
-              addfileToSelectedFiles([...event.target.files])
-            }}
-            type="file"
-            id="file-picker-input"
-            multiple
-          />
-          <button
-            className="file-picker"
-            id="file-picker-button"
-            onClick={onClickFilePickerButton}
-          >
-            Select files
-          </button>
-        </div>
-        <div className="file-list-div">
-          <ul className="file-list">
-            <li>one</li>
-            <li>two</li>
-            {fileList}
-          </ul>
-        </div>
+      {/* <div className="left half"> */}
+      <div className="file-options">
+        <input
+          ref={filePickerInputRef}
+          onChange={(event) => {
+            if (!event.target.files) return
+            addfileToSelectedFiles([...event.target.files])
+          }}
+          type="file"
+          id="select-files-input"
+          multiple
+        />
+        <button id="select-files-button" onClick={onClickFilePickerButton}>
+          Select files
+        </button>
+        <button id="render-selected-button">Render Selected</button>
+        <button id="render-all-button">Render All</button>
       </div>
-      <div className="right half">
-        <div className="player">
-          <video controls ref={videoPlayerRef}></video>
-        </div>
-        <div className="video-options">
-          <p>hi</p>
-        </div>
+      <div className="video-preview">
+        <video controls ref={videoPlayerRef}></video>
       </div>
+      <div className="options">
+        <button>Preset</button>
+        <button>Format</button>
+        <button>Resolution</button>
+        <button>Framerate</button>
+        <button>Rotation</button>
+        <button>Crop</button>
+        <button>Video Settings</button>
+        <button>Audio Settings</button>
+        <button>Subtitle Settings</button>
+      </div>
+      <div className="files-list">
+        {/* <ul>
+          <li>one</li>
+          <li>two</li> */}
+        {fileList}
+        {/* </ul> */}
+      </div>
+      {/* </div> */}
+      {/* <div className="right half"> */}
+      {/* </div> */}
     </div>
   )
 }
