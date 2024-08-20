@@ -34,6 +34,7 @@ function App() {
       messageRef.current.innerHTML = `${progress * 100} % (transcoded time: ${
         time / 1000000
       } s)`
+      console.log(`${progress * 100} % (transcoded time: ${time / 1000000} s)`)
     })
     // toBlobURL is used to bypass CORS issue, urls with the same
     // domain can be used directly.
@@ -71,22 +72,45 @@ function App() {
   //   }
   // }
   const transcodeSelected = async () => {
-    const videoURL = URL.createObjectURL(selectedFiles[highlightedFile])
-    const ffmpeg = ffmpegRef.current
-    await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
-    await ffmpeg.exec(["-i", "input.mp4", "-vf", "scale=-1:480", "output.mp4"])
-    const fileData = await ffmpeg.readFile("output.mp4")
-    const data = new Uint8Array(fileData as ArrayBuffer)
-    if (videoPlayerRef.current) {
-      videoPlayerRef.current.src = URL.createObjectURL(
-        new Blob([data.buffer], { type: "video/mp4" })
-      )
-      const linkToNewVideoFile = URL.createObjectURL(
-        new Blob([data.buffer], { type: "video/webm" })
-      )
-      setDownloadLink(linkToNewVideoFile.toString())
+    try {
+      console.log("transcode started")
+      const videoURL = URL.createObjectURL(selectedFiles[highlightedFile])
+      const ffmpeg = ffmpegRef.current
+
+      await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
+      await ffmpeg.exec([
+        "-i",
+        "input.mp4",
+        "-vf",
+        "scale=-1:480",
+        "output.mp4",
+      ])
+
+      const fileData = await ffmpeg.readFile("output.mp4")
+      const data = new Uint8Array(fileData as ArrayBuffer)
+
+      if (videoPlayerRef.current) {
+        const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
+        const videoURL = URL.createObjectURL(videoBlob)
+        videoPlayerRef.current.src = videoURL
+
+        // Revoke the object URL after use
+        videoPlayerRef.current.onloadeddata = () => {
+          URL.revokeObjectURL(videoURL)
+        }
+
+        const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
+        const downloadURL = URL.createObjectURL(downloadBlob)
+        setDownloadLink(downloadURL)
+
+        // Revoke the object URL after use
+        URL.revokeObjectURL(downloadURL)
+      }
+
+      console.log("transcode complete")
+    } catch (error) {
+      console.error("Error during transcoding:", error)
     }
-    console.log("transcode complete")
   }
 
   //////////////////////////////////////////////////////
