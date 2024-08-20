@@ -48,6 +48,12 @@ button {
 
   display: flex;
   flex-direction: column;
+
+  overflow-y: scroll;
+}
+
+h4 {
+  margin-top: 1rem;
 }
 
 .files-list {
