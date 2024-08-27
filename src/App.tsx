@@ -9,7 +9,7 @@ function App() {
   const filePickerInputRef = useRef<HTMLInputElement>(null)
   const videoPlayerRef = useRef<HTMLVideoElement>(null)
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [importedFiles, setImportedFiles] = useState<File[]>([])
   const [selectedFile, setSelectedFile] = useState(-1)
 
   //////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ function App() {
   const transcodeSelected = async () => {
     try {
       console.log("transcode started")
-      const videoURL = URL.createObjectURL(selectedFiles[selectedFile])
+      const videoURL = URL.createObjectURL(importedFiles[selectedFile])
       const ffmpeg = ffmpegRef.current
 
       await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
@@ -91,14 +91,14 @@ function App() {
       const data = new Uint8Array(fileData as ArrayBuffer)
 
       if (videoPlayerRef.current) {
-        const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
-        const videoURL = URL.createObjectURL(videoBlob)
-        videoPlayerRef.current.src = videoURL
+        // const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
+        // const videoURL = URL.createObjectURL(videoBlob)
+        // videoPlayerRef.current.src = videoURL
 
-        // Revoke the object URL after use
-        videoPlayerRef.current.onloadeddata = () => {
-          URL.revokeObjectURL(videoURL)
-        }
+        // // Revoke the object URL after use
+        // videoPlayerRef.current.onloadeddata = () => {
+        //   URL.revokeObjectURL(videoURL)
+        // }
 
         const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
         const downloadURL = URL.createObjectURL(downloadBlob)
@@ -121,31 +121,31 @@ function App() {
   function onClickFilePickerButton() {
     if (filePickerInputRef.current) filePickerInputRef.current.click()
   }
-  function addfileToSelectedFiles(files: File[]) {
+  function addfileToImportedFiles(files: File[]) {
     if (!files) return
-    const newSelectedFiles = selectedFiles.concat(
+    const newImportedFiles = importedFiles.concat(
       // this is to eliminate duplicates
       files.filter(
-        (item2) => !selectedFiles.some((item1) => item1.name === item2.name)
+        (item2) => !importedFiles.some((item1) => item1.name === item2.name)
       )
     )
-    // setSelectedFiles([...selectedFiles, ...files])
-    setSelectedFiles(newSelectedFiles)
-    console.log(selectedFiles)
+    // setImportedFiles([...importedFiles, ...files])
+    setImportedFiles(newImportedFiles)
+    console.log(importedFiles)
     // console.log(filePickerInputRef.current?.value)
   }
   function handleDeleteFile(fileName: string, index: number) {
     if (selectedFile == index) {
       handleSelectFile(-1)
     }
-    setSelectedFiles((prevFiles) =>
+    setImportedFiles((prevFiles) =>
       prevFiles.filter((file) => file.name != fileName)
     )
   }
   function handleSelectFile(fileIndex: number) {
     setSelectedFile(fileIndex)
   }
-  const fileList = selectedFiles.map((file, index) => {
+  const fileList = importedFiles.map((file, index) => {
     return (
       <FileListItem
         key={file.name}
@@ -181,7 +181,7 @@ function App() {
     if (!videoPlayerRef.current) return
     if (selectedFile >= 0) {
       videoPlayerRef.current.src = URL.createObjectURL(
-        selectedFiles[selectedFile]
+        importedFiles[selectedFile]
       )
     }
     if (selectedFile < 0) {
@@ -191,8 +191,8 @@ function App() {
 
   // logging
   useEffect(() => {
-    console.log(selectedFiles)
-  }, [selectedFiles])
+    console.log(importedFiles)
+  }, [importedFiles])
 
   return (
     <div className="app">
@@ -202,7 +202,7 @@ function App() {
           ref={filePickerInputRef}
           onChange={(event) => {
             if (!event.target.files) return
-            addfileToSelectedFiles([...event.target.files])
+            addfileToImportedFiles([...event.target.files])
           }}
           type="file"
           id="select-files-input"
