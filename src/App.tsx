@@ -166,8 +166,16 @@ function App() {
       <button>Loaded</button>
     </>
   ) : (
-    <button onClick={load}>Load ffmpeg-core</button>
+    <button onClick={load}>Loading ffmpeg</button>
   )
+  useEffect(() => {
+    try {
+      load()
+    } catch (err) {
+      console.log("Error loading ffmpeg")
+      console.log(err)
+    }
+  }, [])
   useEffect(() => {
     if (!videoPlayerRef.current) return
     if (highlightedFile >= 0) {
@@ -202,10 +210,16 @@ function App() {
         <button id="select-files-button" onClick={onClickFilePickerButton}>
           Select files
         </button>
-        <button onClick={transcodeSelected} id="render-selected-button">
+        <button
+          onClick={transcodeSelected}
+          id="render-selected-button"
+          disabled={!loaded}
+        >
           Render Selected
         </button>
-        <button id="render-all-button">Render All</button>
+        <button id="render-all-button" disabled={!loaded}>
+          Render All
+        </button>
         {ffmpegStatus}
         <a href={downloadLink} download="output.mp4">
           Download
