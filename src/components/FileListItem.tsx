@@ -5,26 +5,22 @@ export default function FileListItem(props: any) {
     <div
       className="file-list-item"
       style={
-        props.highlightedFile == props.index ? { border: "5px solid blue" } : {}
+        props.selectedFile == props.index ? { border: "5px solid blue" } : {}
       }
       // style={{ border: "5px solid blue" }}
     >
       <button
         style={
-          props.highlightedFile == props.index
-            ? { backgroundColor: "blue" }
-            : {}
+          props.selectedFile == props.index ? { backgroundColor: "blue" } : {}
         }
-        onClick={props.handleHighlightFile}
+        onClick={props.handleSelectFile}
         className="file-name"
       >
         {props.fileName}
       </button>
       <button
         style={
-          props.highlightedFile == props.index
-            ? { backgroundColor: "blue" }
-            : {}
+          props.selectedFile == props.index ? { backgroundColor: "blue" } : {}
         }
         onClick={props.handleDeleteFile}
         className="close"

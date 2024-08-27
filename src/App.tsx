@@ -10,7 +10,7 @@ function App() {
   const videoPlayerRef = useRef<HTMLVideoElement>(null)
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [highlightedFile, setHighlightedFile] = useState(-1)
+  const [selectedFile, setSelectedFile] = useState(-1)
 
   //////////////////////////////////////////////////////
   ////////////////////// ffmpeg ////////////////////////
@@ -50,6 +50,7 @@ function App() {
       ),
     })
     setLoaded(true)
+    console.log("ffmpeg-wasm loaded")
     // console.log({ loaded })
   }
 
@@ -74,7 +75,7 @@ function App() {
   const transcodeSelected = async () => {
     try {
       console.log("transcode started")
-      const videoURL = URL.createObjectURL(selectedFiles[highlightedFile])
+      const videoURL = URL.createObjectURL(selectedFiles[selectedFile])
       const ffmpeg = ffmpegRef.current
 
       await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
@@ -134,15 +135,15 @@ function App() {
     // console.log(filePickerInputRef.current?.value)
   }
   function handleDeleteFile(fileName: string, index: number) {
-    if (highlightedFile == index) {
-      handleHighlightFile(-1)
+    if (selectedFile == index) {
+      handleSelectFile(-1)
     }
     setSelectedFiles((prevFiles) =>
       prevFiles.filter((file) => file.name != fileName)
     )
   }
-  function handleHighlightFile(fileIndex: number) {
-    setHighlightedFile(fileIndex)
+  function handleSelectFile(fileIndex: number) {
+    setSelectedFile(fileIndex)
   }
   const fileList = selectedFiles.map((file, index) => {
     return (
@@ -153,9 +154,9 @@ function App() {
         handleDeleteFile={() => {
           handleDeleteFile(file.name, index)
         }}
-        highlightedFile={highlightedFile}
-        handleHighlightFile={() => {
-          handleHighlightFile(index)
+        selectedFile={selectedFile}
+        handleSelectFile={() => {
+          handleSelectFile(index)
         }}
       />
     )
@@ -178,15 +179,15 @@ function App() {
   }, [])
   useEffect(() => {
     if (!videoPlayerRef.current) return
-    if (highlightedFile >= 0) {
+    if (selectedFile >= 0) {
       videoPlayerRef.current.src = URL.createObjectURL(
-        selectedFiles[highlightedFile]
+        selectedFiles[selectedFile]
       )
     }
-    if (highlightedFile < 0) {
+    if (selectedFile < 0) {
       videoPlayerRef.current.src = ""
     }
-  }, [highlightedFile])
+  }, [selectedFile])
 
   // logging
   useEffect(() => {
