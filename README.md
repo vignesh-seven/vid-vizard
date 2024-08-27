@@ -6,7 +6,7 @@ Video transcoding directly in your browser 🎞️
 
 ### Todo
 
-- [X] Core: Integrate ffmpeg-wasm 
+- [ X ] Core: Integrate ffmpeg-wasm 
 
 - [ ] Feature: Multiple queues, with different settings
 - [ ] Feature: Presets for commonly used configs
