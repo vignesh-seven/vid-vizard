@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { MouseEvent, useEffect, useRef, useState } from "react"
 import { FFmpeg } from "@ffmpeg/ffmpeg"
 import { toBlobURL, fetchFile } from "@ffmpeg/util"
 import "./App.css"
@@ -10,7 +10,7 @@ function App() {
   const videoPlayerRef = useRef<HTMLVideoElement>(null)
 
   const [importedFiles, setImportedFiles] = useState<File[]>([])
-  const [selectedFile, setSelectedFile] = useState(-1)
+  const [selectedFiles, setSelectedFiles] = useState<number[]>([])
 
   //////////////////////////////////////////////////////
   ////////////////////// ffmpeg ////////////////////////
@@ -75,7 +75,7 @@ function App() {
   const transcodeSelected = async () => {
     try {
       console.log("transcode started")
-      const videoURL = URL.createObjectURL(importedFiles[selectedFile])
+      const videoURL = URL.createObjectURL(importedFiles[selectedFiles[0]]) // TEMPORARY, pick the first file // TODO: Add logic to handle the whole array of selected files
       const ffmpeg = ffmpegRef.current
 
       await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
@@ -134,16 +134,22 @@ function App() {
     console.log(importedFiles)
     // console.log(filePickerInputRef.current?.value)
   }
-  function handleDeleteFile(fileName: string, index: number) {
-    if (selectedFile == index) {
-      handleSelectFile(-1)
+  // function handleDeleteFile(fileName: string, index: number) {
+  //   if (selectedFiles == index) {
+  //     handleSelectFile(-1)
+  //   }
+  //   setImportedFiles((prevFiles) =>
+  //     prevFiles.filter((file) => file.name != fileName)
+  //   )
+  // }
+  function handleSelectFile(e: MouseEvent | null, fileIndex: number) {
+    if (!e) return
+    if (e.ctrlKey) {
+      setSelectedFiles([...selectedFiles, fileIndex])
+    } else {
+      setSelectedFiles([fileIndex])
     }
-    setImportedFiles((prevFiles) =>
-      prevFiles.filter((file) => file.name != fileName)
-    )
-  }
-  function handleSelectFile(fileIndex: number) {
-    setSelectedFile(fileIndex)
+    console.log(selectedFiles)
   }
   const fileList = importedFiles.map((file, index) => {
     return (
@@ -151,12 +157,14 @@ function App() {
         key={file.name}
         index={index}
         fileName={file.name}
-        handleDeleteFile={() => {
-          handleDeleteFile(file.name, index)
-        }}
-        selectedFile={selectedFile}
-        handleSelectFile={() => {
-          handleSelectFile(index)
+        // handleDeleteFile={() => {
+        //   handleDeleteFile(file.name, index)
+        // }}
+        selected={selectedFiles.some((selectedFile) => {
+          return selectedFile == index
+        })}
+        handleSelectFile={(e: MouseEvent | null) => {
+          handleSelectFile(e, index)
         }}
       />
     )
@@ -177,17 +185,17 @@ function App() {
       console.log(err)
     }
   }, [])
-  useEffect(() => {
-    if (!videoPlayerRef.current) return
-    if (selectedFile >= 0) {
-      videoPlayerRef.current.src = URL.createObjectURL(
-        importedFiles[selectedFile]
-      )
-    }
-    if (selectedFile < 0) {
-      videoPlayerRef.current.src = ""
-    }
-  }, [selectedFile])
+  // useEffect(() => {
+  //   if (!videoPlayerRef.current) return
+  //   if (selectedFiles >= 0) {
+  //     videoPlayerRef.current.src = URL.createObjectURL(
+  //       importedFiles[selectedFiles]
+  //     )
+  //   }
+  //   if (selectedFiles < 0) {
+  //     videoPlayerRef.current.src = ""
+  //   }
+  // }, [selectedFiles])
 
   // logging
   useEffect(() => {
