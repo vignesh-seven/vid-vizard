@@ -16,7 +16,7 @@ export default function FileListItem(props: any) {
       </button>
       <button
         style={props.selected == props.index ? { backgroundColor: "blue" } : {}}
-        // onClick={props.handleDeleteFile}
+        onClick={props.handleDeleteFile}
         className="close"
       >
         X

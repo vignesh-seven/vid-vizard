@@ -5,13 +5,24 @@ import "./App.css"
 
 import FileListItem from "./components/FileListItem"
 
+type importedVideo = {
+  id: string
+  file: File
+  selected: boolean
+  transcodedURL: string | null
+}
+
 function App() {
   const filePickerInputRef = useRef<HTMLInputElement>(null)
   const videoPlayerRef = useRef<HTMLVideoElement>(null)
 
-  const [importedFiles, setImportedFiles] = useState<File[]>([])
-  const [selectedFiles, setSelectedFiles] = useState<number[]>([])
-
+  // const [importedFiles, setImportedFiles] = useState<File[]>([])
+  // const [selectedFiles, setSelectedFiles] = useState<number[]>([])
+  //
+  //////////// NEW STATE ////////////////////
+  // { id, File, selected, transcodedURL }
+  const [importedVideos, setImportedVideos] = useState<importedVideo[]>([])
+  const [transcodingSettings, setTranscodingSettings] = useState()
   //////////////////////////////////////////////////////
   ////////////////////// ffmpeg ////////////////////////
   //////////////////////////////////////////////////////
@@ -72,103 +83,94 @@ function App() {
   //     setDownloadLink(linkToNewVideoFile.toString())
   //   }
   // }
-  const transcodeSelected = async () => {
-    try {
-      console.log("transcode started")
-      const videoURL = URL.createObjectURL(importedFiles[selectedFiles[0]]) // TEMPORARY, pick the first file // TODO: Add logic to handle the whole array of selected files
-      const ffmpeg = ffmpegRef.current
+  // const transcodeSelected = async () => {
+  //   try {
+  //     console.log("transcode started")
+  //     const videoURL = URL.createObjectURL(importedFiles[selectedFiles[0]]) // TEMPORARY, pick the first file // TODO: Add logic to handle the whole array of selected files
+  //     const ffmpeg = ffmpegRef.current
 
-      await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
-      await ffmpeg.exec([
-        "-i",
-        "input.mp4",
-        "-vf",
-        "scale=-1:480",
-        "output.mp4",
-      ])
+  //     await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
+  //     await ffmpeg.exec([
+  //       "-i",
+  //       "input.mp4",
+  //       "-vf",
+  //       "scale=-1:480",
+  //       "output.mp4",
+  //     ])
 
-      const fileData = await ffmpeg.readFile("output.mp4")
-      const data = new Uint8Array(fileData as ArrayBuffer)
+  //     const fileData = await ffmpeg.readFile("output.mp4")
+  //     const data = new Uint8Array(fileData as ArrayBuffer)
 
-      if (videoPlayerRef.current) {
-        // const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
-        // const videoURL = URL.createObjectURL(videoBlob)
-        // videoPlayerRef.current.src = videoURL
+  //     if (videoPlayerRef.current) {
+  //       // const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
+  //       // const videoURL = URL.createObjectURL(videoBlob)
+  //       // videoPlayerRef.current.src = videoURL
 
-        // // Revoke the object URL after use
-        // videoPlayerRef.current.onloadeddata = () => {
-        //   URL.revokeObjectURL(videoURL)
-        // }
+  //       // // Revoke the object URL after use
+  //       // videoPlayerRef.current.onloadeddata = () => {
+  //       //   URL.revokeObjectURL(videoURL)
+  //       // }
 
-        const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
-        const downloadURL = URL.createObjectURL(downloadBlob)
-        setDownloadLink(downloadURL)
+  //       const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
+  //       const downloadURL = URL.createObjectURL(downloadBlob)
+  //       setDownloadLink(downloadURL)
 
-        // Revoke the object URL after use
-        URL.revokeObjectURL(downloadURL)
-      }
+  //       // Revoke the object URL after use
+  //       URL.revokeObjectURL(downloadURL)
+  //     }
 
-      console.log("transcode complete")
-    } catch (error) {
-      console.error("Error during transcoding:", error)
-    }
-  }
+  //     console.log("transcode complete")
+  //   } catch (error) {
+  //     console.error("Error during transcoding:", error)
+  //   }
+  // }
 
   //////////////////////////////////////////////////////
   /////////////////// ffmpeg ends //////////////////////
   //////////////////////////////////////////////////////
 
+  function fileNameToId(fileName: string) {
+    // Remove spaces and special characters using regular expressions
+    return fileName.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, "")
+  }
   function onClickFilePickerButton() {
     if (filePickerInputRef.current) filePickerInputRef.current.click()
   }
   function addfileToImportedFiles(files: File[]) {
     if (!files) return
-    const newImportedFiles = importedFiles.concat(
-      // this is to eliminate duplicates
-      files.filter(
-        (item2) => !importedFiles.some((item1) => item1.name === item2.name)
-      )
-    )
+    const newImportedVideos = files.map((file) => {
+      const newImportedVideo: importedVideo = {
+        id: fileNameToId(file.name),
+        file: file,
+        selected: false,
+        transcodedURL: null,
+      }
+      return newImportedVideo
+    })
+
     // setImportedFiles([...importedFiles, ...files])
-    setImportedFiles(newImportedFiles)
-    console.log(importedFiles)
+    // setImportedFiles(newImportedVideos)
+    setImportedVideos(newImportedVideos)
+    // console.log(newImportedVideos)
     // console.log(filePickerInputRef.current?.value)
   }
-  // function handleDeleteFile(fileName: string, index: number) {
-  //   if (selectedFiles == index) {
-  //     handleSelectFile(-1)
-  //   }
-  //   setImportedFiles((prevFiles) =>
-  //     prevFiles.filter((file) => file.name != fileName)
-  //   )
-  // }
-  function handleSelectFile(e: MouseEvent | null, fileIndex: number) {
-    if (!e) return
-    if (e.ctrlKey) {
-      setSelectedFiles([...selectedFiles, fileIndex])
-    } else {
-      setSelectedFiles([fileIndex])
-    }
-    console.log(selectedFiles)
-  }
-  const fileList = importedFiles.map((file, index) => {
-    return (
-      <FileListItem
-        key={file.name}
-        index={index}
-        fileName={file.name}
-        // handleDeleteFile={() => {
-        //   handleDeleteFile(file.name, index)
-        // }}
-        selected={selectedFiles.some((selectedFile) => {
-          return selectedFile == index
-        })}
-        handleSelectFile={(e: MouseEvent | null) => {
-          handleSelectFile(e, index)
-        }}
-      />
+  function handleDeleteFile(id: string) {
+    // if (selectedFiles == index) {
+    //   handleSelectFile(-1)
+    // }
+    setImportedVideos((prevVideos) =>
+      prevVideos.filter((video) => video.id != id)
     )
-  })
+  }
+  // function handleSelectFile(e: MouseEvent | null, fileIndex: number) {
+  //   if (!e) return
+  //   if (e.ctrlKey) {
+  //     setSelectedFiles([...selectedFiles, fileIndex])
+  //   } else {
+  //     setSelectedFiles([fileIndex])
+  //   }
+  //   console.log(selectedFiles)
+  // }
   const ffmpegStatus = loaded ? (
     <>
       <p ref={messageRef}></p>
@@ -199,9 +201,27 @@ function App() {
 
   // logging
   useEffect(() => {
-    console.log(importedFiles)
-  }, [importedFiles])
+    console.log(importedVideos)
+  }, [importedVideos])
 
+  const fileList = importedVideos.map((video, index) => {
+    return (
+      <FileListItem
+        key={video.id}
+        index={index}
+        fileName={video.file.name}
+        handleDeleteFile={() => {
+          handleDeleteFile(video.id)
+        }}
+        // selected={selectedFiles.some((selectedFile) => {
+        //   return selectedFile == index
+        // })}
+        // handleSelectFile={(e: MouseEvent | null) => {
+        //   handleSelectFile(e, index)
+        // }}
+      />
+    )
+  })
   return (
     <div className="app">
       {/* <div className="left half"> */}
@@ -220,7 +240,7 @@ function App() {
           Select files
         </button>
         <button
-          onClick={transcodeSelected}
+          // onClick={transcodeSelected}
           id="render-selected-button"
           disabled={!loaded}
         >
