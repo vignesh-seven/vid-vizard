@@ -98,14 +98,18 @@ function App() {
     // ffmpeg.on("log", ({ message }) => {
     //   if (messageRef.current) messageRef.current.innerHTML = message
     // })
-    // Listen to progress event instead of log.
-    ffmpeg.on("progress", ({ progress, time }) => {
-      if (!messageRef.current) return
-      messageRef.current.innerHTML = `${progress * 100} % (transcoded time: ${
-        time / 1000000
-      } s)`
-      console.log(`${progress * 100} % (transcoded time: ${time / 1000000} s)`)
+    ffmpeg.on("log", ({ message }) => {
+      // if (messageRef.current) messageRef.current.innerHTML = message
+      console.log(message)
     })
+    // Listen to progress event instead of log.
+    // ffmpeg.on("progress", ({ progress, time }) => {
+    //   if (!messageRef.current) return
+    //   messageRef.current.innerHTML = `${progress * 100} % (transcoded time: ${
+    //     time / 1000000
+    //   } s)`
+    //   console.log(`${progress * 100} % (transcoded time: ${time / 1000000} s)`)
+    // })
     // toBlobURL is used to bypass CORS issue, urls with the same
     // domain can be used directly.
     await ffmpeg.load({
@@ -198,7 +202,7 @@ function App() {
         // ffmpeg -i input -c:v libx264 -preset slow -crf 22 -c:a copy output.mkv
         await ffmpeg.exec([
           "-i",
-          `${importedVideo.file.name}`,
+          "input.mp4",
           "-c:v",
           `${transcodingSettings.videoCodec}`,
           "-preset",
