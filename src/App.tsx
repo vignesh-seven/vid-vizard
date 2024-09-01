@@ -11,6 +11,53 @@ type importedVideo = {
   selected: boolean
   transcodedURL: string | null
 }
+enum FileFormat {
+  mkv = ".mkv",
+  mp4 = ".mp4",
+  webm = ".webm",
+}
+enum Resolution {
+  fhd = "1080p",
+  fourK = "4K",
+}
+
+enum Preset {
+  ultrafast = "ultrafast",
+  superfast = "superfast",
+  veryfast = "veryfast",
+  faster = "faster",
+  fast = "fast",
+  medium = "medium", // default preset
+  slow = "slow",
+  slower = "slower",
+  veryslow = "veryslow",
+  placebo = "placebo",
+}
+enum Profile {
+  baseline = "baseline",
+  main = "main",
+  high = "high",
+  high10 = "high10", // (first 10 bit compatible profile)
+  high422 = "high422", // (supports yuv420p, yuv422p, yuv420p10le and yuv422p10le)
+  high444 = "high444",
+}
+interface H264 {
+  crf: number // 0-51
+  preset: Preset
+  profile: Profile
+}
+enum VideoCodec {
+  h264 = "libx264",
+  h265 = "libx265",
+}
+type transcodingSettings = {
+  format: FileFormat
+  resolution: Resolution
+  framerate: number
+  rotation: number
+  videoCodec: VideoCodec
+  videoCodecSettings: H264
+}
 
 function App() {
   const filePickerInputRef = useRef<HTMLInputElement>(null)
@@ -22,7 +69,19 @@ function App() {
   //////////// NEW STATE ////////////////////
   // { id, File, selected, transcodedURL }
   const [importedVideos, setImportedVideos] = useState<importedVideo[]>([])
-  const [transcodingSettings, setTranscodingSettings] = useState()
+  const [transcodingSettings, setTranscodingSettings] =
+    useState<transcodingSettings>({
+      format: FileFormat.mkv,
+      resolution: Resolution.fhd,
+      framerate: 30,
+      rotation: 0,
+      videoCodec: VideoCodec.h264,
+      videoCodecSettings: {
+        crf: 18,
+        preset: Preset.medium,
+        profile: Profile.baseline,
+      },
+    })
   //////////////////////////////////////////////////////
   ////////////////////// ffmpeg ////////////////////////
   //////////////////////////////////////////////////////
@@ -124,6 +183,62 @@ function App() {
   //     console.error("Error during transcoding:", error)
   //   }
   // }
+  const transcodeVideo = async () =>
+    // importedVideo: importedVideo,
+    // transcodingSettings: transcodingSettings
+    {
+      const importedVideo = importedVideos[0]
+
+      try {
+        console.log("transcode started")
+        const videoURL = URL.createObjectURL(importedVideos[0].file)
+        const ffmpeg = ffmpegRef.current
+
+        await ffmpeg.writeFile("input.mp4", await fetchFile(videoURL))
+        // ffmpeg -i input -c:v libx264 -preset slow -crf 22 -c:a copy output.mkv
+        await ffmpeg.exec([
+          "-i",
+          `${importedVideo.file.name}`,
+          "-c:v",
+          `${transcodingSettings.videoCodec}`,
+          "-preset",
+          `${transcodingSettings.videoCodecSettings.preset}`,
+          "-crf",
+          `${transcodingSettings.videoCodecSettings.crf}`,
+          "-c:a", // copy audio tracks without encoding
+          "copy",
+
+          "-vf",
+          "scale=-1:480",
+          `output.mp4`,
+        ])
+
+        const fileData = await ffmpeg.readFile("output.mp4")
+        const data = new Uint8Array(fileData as ArrayBuffer)
+
+        // if (videoPlayerRef.current) {
+        // const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
+        // const videoURL = URL.createObjectURL(videoBlob)
+        // videoPlayerRef.current.src = videoURL
+
+        // // Revoke the object URL after use
+        // videoPlayerRef.current.onloadeddata = () => {
+        //   URL.revokeObjectURL(videoURL)
+        // }
+
+        const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
+        const downloadURL = URL.createObjectURL(downloadBlob)
+        setDownloadLink(downloadURL)
+
+        // Revoke the object URL after use
+        URL.revokeObjectURL(downloadURL)
+        // }
+
+        console.log("transcode complete")
+      } catch (error) {
+        console.error("Error during transcoding:", error)
+      }
+    }
 
   //////////////////////////////////////////////////////
   /////////////////// ffmpeg ends //////////////////////
@@ -246,7 +361,11 @@ function App() {
         >
           Render Selected
         </button>
-        <button id="render-all-button" disabled={!loaded}>
+        <button
+          id="render-all-button"
+          onClick={transcodeVideo}
+          disabled={!loaded}
+        >
           Render All
         </button>
         {ffmpegStatus}
