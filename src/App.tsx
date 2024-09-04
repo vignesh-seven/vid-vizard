@@ -191,8 +191,6 @@ function App() {
     // importedVideo: importedVideo,
     // transcodingSettings: transcodingSettings
     {
-      const importedVideo = importedVideos[0]
-
       try {
         console.log("transcode started")
         const videoURL = URL.createObjectURL(importedVideos[0].file)
@@ -281,15 +279,20 @@ function App() {
       prevVideos.filter((video) => video.id != id)
     )
   }
-  // function handleSelectFile(e: MouseEvent | null, fileIndex: number) {
-  //   if (!e) return
-  //   if (e.ctrlKey) {
-  //     setSelectedFiles([...selectedFiles, fileIndex])
-  //   } else {
-  //     setSelectedFiles([fileIndex])
-  //   }
-  //   console.log(selectedFiles)
-  // }
+  function handleSelectFile(e: MouseEvent | null, index: number) {
+    if (!e) return
+    // if (e.ctrlKey) {
+    //   setSelectedFiles([...selectedFiles, fileIndex])
+    // } else {
+    //   setSelectedFiles([fileIndex])
+    // }
+    // console.log(selectedFiles)
+    setImportedVideos((prevVideos) =>
+      prevVideos.map((video, i) =>
+        i === index ? { ...video, selected: !video.selected } : video
+      )
+    )
+  }
   const ffmpegStatus = loaded ? (
     <>
       <p ref={messageRef}></p>
@@ -332,12 +335,10 @@ function App() {
         handleDeleteFile={() => {
           handleDeleteFile(video.id)
         }}
-        // selected={selectedFiles.some((selectedFile) => {
-        //   return selectedFile == index
-        // })}
-        // handleSelectFile={(e: MouseEvent | null) => {
-        //   handleSelectFile(e, index)
-        // }}
+        selected={video.selected}
+        handleSelectFile={(e: MouseEvent | null) => {
+          handleSelectFile(e, index)
+        }}
       />
     )
   })
