@@ -8,7 +8,7 @@ import FileListItem from "./components/FileListItem"
 type importedVideo = {
   id: string
   file: File
-  selected: boolean
+  // selected: boolean
   transcodedURL: string | null
 }
 enum FileFormat {
@@ -64,11 +64,11 @@ function App() {
   const videoPlayerRef = useRef<HTMLVideoElement>(null)
 
   // const [importedFiles, setImportedFiles] = useState<File[]>([])
-  // const [selectedFiles, setSelectedFiles] = useState<number[]>([])
   //
   //////////// NEW STATE ////////////////////
   // { id, File, selected, transcodedURL }
   const [importedVideos, setImportedVideos] = useState<importedVideo[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<number[]>([])
   const [transcodingSettings, setTranscodingSettings] =
     useState<transcodingSettings>({
       format: FileFormat.mkv,
@@ -259,7 +259,7 @@ function App() {
       const newImportedVideo: importedVideo = {
         id: fileNameToId(file.name),
         file: file,
-        selected: false,
+        // selected: false,
         transcodedURL: null,
       }
       return newImportedVideo
@@ -279,19 +279,40 @@ function App() {
       prevVideos.filter((video) => video.id != id)
     )
   }
-  function handleSelectFile(e: MouseEvent | null, index: number) {
+  function handleSelectFile(e: MouseEvent | null, fileIndex: number) {
     if (!e) return
-    // if (e.ctrlKey) {
-    //   setSelectedFiles([...selectedFiles, fileIndex])
-    // } else {
-    //   setSelectedFiles([fileIndex])
-    // }
+    if (e.ctrlKey) {
+      if (selectedFiles.some((selectedIndex) => selectedIndex == fileIndex)) {
+        setSelectedFiles(selectedFiles.filter((index) => index != fileIndex))
+      } else {
+        setSelectedFiles([...selectedFiles, fileIndex])
+      }
+    } else {
+      if (selectedFiles.some((selectedIndex) => selectedIndex == fileIndex)) {
+        if (selectedFiles.length >= 2) {
+          setSelectedFiles([fileIndex])
+        } else {
+          setSelectedFiles([])
+        }
+      } else {
+        setSelectedFiles([fileIndex])
+      }
+      // if (selectedFiles.length == 0) {
+      //   setSelectedFiles([fileIndex])
+      // } else if (selectedFiles.length >= 1) {
+      //   if (fileIndex == selectedFiles[0]) {
+      //     setSelectedFiles([])
+      //   } else {
+      //     setSelectedFiles([fileIndex])
+      //   }
+      // }
+    }
     // console.log(selectedFiles)
-    setImportedVideos((prevVideos) =>
-      prevVideos.map((video, i) =>
-        i === index ? { ...video, selected: !video.selected } : video
-      )
-    )
+    // setImportedVideos((prevVideos) =>
+    //   prevVideos.map((video, i) =>
+    //     i === index ? { ...video, selected: !video.selected } : video
+    //   )
+    // )
   }
   const ffmpegStatus = loaded ? (
     <>
@@ -335,7 +356,7 @@ function App() {
         handleDeleteFile={() => {
           handleDeleteFile(video.id)
         }}
-        selected={video.selected}
+        selected={selectedFiles.some((selectedIndex) => selectedIndex == index)}
         handleSelectFile={(e: MouseEvent | null) => {
           handleSelectFile(e, index)
         }}
