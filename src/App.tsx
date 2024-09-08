@@ -426,8 +426,47 @@ function App() {
           <option value="25">25</option>
         </select>
         <h4>Rotation</h4>
+        <select name="rotation" id="rotation">
+          <option value="0">None</option>
+          <option value="90">90</option>
+          <option value="180">180</option>
+          <option value="270">270</option>
+        </select>
         <h4>Crop</h4>
+        <div id="crop">
+          <label htmlFor="crop-left">Left</label>
+          <input type="number" name="crop" id="crop-left" defaultValue={0} />
+          <br></br>
+          <label htmlFor="crop-right">Right</label>
+          <input type="number" name="crop" id="crop-right" defaultValue={0} />
+          <br></br>
+          <label htmlFor="crop-top">Top</label>
+          <input type="number" name="crop" id="crop-top" defaultValue={0} />
+          <br></br>
+          <label htmlFor="crop-bottom">Bottom</label>
+          <input type="number" name="crop" id="crop-bottom" defaultValue={0} />
+          <br></br>
+        </div>
         <h4>Video Settings</h4>
+        <label htmlFor="codec">Codec</label>
+        <select name="codec" id="codec">
+          <option value={VideoCodec.h264}>H.264</option>
+          <option value={VideoCodec.h265}>H.265</option>
+        </select>
+        <label htmlFor="preset">Preset</label>
+        <select name="preset" id="preset">
+          {Object.keys(Preset).map((key) => (
+            <option value={key}>{key}</option>
+          ))}
+        </select>
+        <label htmlFor="profile">Profile</label>
+        <select name="profile" id="profile">
+          {Object.keys(Profile).map((key) => (
+            <>
+              <option value={key}>{key}</option>
+            </>
+          ))}
+        </select>
         <h4>Audio Settings</h4>
         <h4>Subtitle Settings</h4>
       </div>
