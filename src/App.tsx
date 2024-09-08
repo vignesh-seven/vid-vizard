@@ -68,7 +68,7 @@ function App() {
   //////////// NEW STATE ////////////////////
   // { id, File, selected, transcodedURL }
   const [importedVideos, setImportedVideos] = useState<importedVideo[]>([])
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<importedVideo[]>([])
   const [transcodingSettings, setTranscodingSettings] =
     useState<transcodingSettings>({
       format: FileFormat.mkv,
@@ -271,31 +271,31 @@ function App() {
     // console.log(newImportedVideos)
     // console.log(filePickerInputRef.current?.value)
   }
-  function handleDeleteFile(fileId: string) {
+  function handleDeleteFile(video: importedVideo) {
     setSelectedFiles((prevSelectedFiles) =>
-      prevSelectedFiles.filter((Id) => Id != fileId)
+      prevSelectedFiles.filter((vid) => vid.id != video.id)
     )
     setImportedVideos((prevVideos) =>
-      prevVideos.filter((video) => video.id != fileId)
+      prevVideos.filter((vid) => vid.id != video.id)
     )
   }
-  function handleSelectFile(e: MouseEvent | null, fileId: string) {
+  function handleSelectFile(e: MouseEvent | null, video: importedVideo) {
     if (!e) return
     if (e.ctrlKey) {
-      if (selectedFiles.some((selectedId) => selectedId == fileId)) {
-        setSelectedFiles(selectedFiles.filter((index) => index != fileId))
+      if (selectedFiles.some((vid) => vid.id == video.id)) {
+        setSelectedFiles(selectedFiles.filter((vid) => vid.id != video.id))
       } else {
-        setSelectedFiles([...selectedFiles, fileId])
+        setSelectedFiles([...selectedFiles, video])
       }
     } else {
-      if (selectedFiles.some((selectedId) => selectedId == fileId)) {
+      if (selectedFiles.some((vid) => vid.id == video.id)) {
         if (selectedFiles.length >= 2) {
-          setSelectedFiles([fileId])
+          setSelectedFiles([video])
         } else {
           setSelectedFiles([])
         }
       } else {
-        setSelectedFiles([fileId])
+        setSelectedFiles([video])
       }
       // if (selectedFiles.length == 0) {
       //   setSelectedFiles([fileIndex])
@@ -332,10 +332,10 @@ function App() {
   }, [])
   // useEffect(() => {
   //   if (!videoPlayerRef.current) return
-  //   if (selectedFiles >= 0) {
+  //   if (selectedFiles.length > 0) {
   //     videoPlayerRef.current.src = URL.createObjectURL(
-  //       importedFiles[selectedFiles]
   //     )
+  //     // importedVideos.some((video) => video.id == selectedFiles[selectedFiles.length - 1])
   //   }
   //   if (selectedFiles < 0) {
   //     videoPlayerRef.current.src = ""
@@ -354,11 +354,11 @@ function App() {
         index={index}
         fileName={video.file.name}
         handleDeleteFile={() => {
-          handleDeleteFile(video.id)
+          handleDeleteFile(video)
         }}
-        selected={selectedFiles.some((selectedId) => selectedId == video.id)}
+        selected={selectedFiles.some((vid) => vid.id == video.id)}
         handleSelectFile={(e: MouseEvent | null) => {
-          handleSelectFile(e, video.id)
+          handleSelectFile(e, video)
         }}
       />
     )
