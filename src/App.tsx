@@ -68,7 +68,7 @@ function App() {
   //////////// NEW STATE ////////////////////
   // { id, File, selected, transcodedURL }
   const [importedVideos, setImportedVideos] = useState<importedVideo[]>([])
-  const [selectedFiles, setSelectedFiles] = useState<number[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [transcodingSettings, setTranscodingSettings] =
     useState<transcodingSettings>({
       format: FileFormat.mkv,
@@ -271,31 +271,31 @@ function App() {
     // console.log(newImportedVideos)
     // console.log(filePickerInputRef.current?.value)
   }
-  function handleDeleteFile(id: string) {
-    // if (selectedFiles == index) {
-    //   handleSelectFile(-1)
-    // }
+  function handleDeleteFile(fileId: string) {
+    setSelectedFiles((prevSelectedFiles) =>
+      prevSelectedFiles.filter((Id) => Id != fileId)
+    )
     setImportedVideos((prevVideos) =>
-      prevVideos.filter((video) => video.id != id)
+      prevVideos.filter((video) => video.id != fileId)
     )
   }
-  function handleSelectFile(e: MouseEvent | null, fileIndex: number) {
+  function handleSelectFile(e: MouseEvent | null, fileId: string) {
     if (!e) return
     if (e.ctrlKey) {
-      if (selectedFiles.some((selectedIndex) => selectedIndex == fileIndex)) {
-        setSelectedFiles(selectedFiles.filter((index) => index != fileIndex))
+      if (selectedFiles.some((selectedId) => selectedId == fileId)) {
+        setSelectedFiles(selectedFiles.filter((index) => index != fileId))
       } else {
-        setSelectedFiles([...selectedFiles, fileIndex])
+        setSelectedFiles([...selectedFiles, fileId])
       }
     } else {
-      if (selectedFiles.some((selectedIndex) => selectedIndex == fileIndex)) {
+      if (selectedFiles.some((selectedId) => selectedId == fileId)) {
         if (selectedFiles.length >= 2) {
-          setSelectedFiles([fileIndex])
+          setSelectedFiles([fileId])
         } else {
           setSelectedFiles([])
         }
       } else {
-        setSelectedFiles([fileIndex])
+        setSelectedFiles([fileId])
       }
       // if (selectedFiles.length == 0) {
       //   setSelectedFiles([fileIndex])
@@ -356,9 +356,9 @@ function App() {
         handleDeleteFile={() => {
           handleDeleteFile(video.id)
         }}
-        selected={selectedFiles.some((selectedIndex) => selectedIndex == index)}
+        selected={selectedFiles.some((selectedId) => selectedId == video.id)}
         handleSelectFile={(e: MouseEvent | null) => {
-          handleSelectFile(e, index)
+          handleSelectFile(e, video.id)
         }}
       />
     )
