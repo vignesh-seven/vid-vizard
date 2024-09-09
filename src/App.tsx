@@ -12,12 +12,13 @@ type importedVideo = {
   transcodedURL: string | null
 }
 enum FileFormat {
+  same = "Same as source",
   mkv = ".mkv",
   mp4 = ".mp4",
   webm = ".webm",
 }
 enum Resolution {
-  fhd = "1080p",
+  fHD = "1080p",
   fourK = "4K",
 }
 
@@ -46,6 +47,12 @@ interface H264 {
   preset: Preset
   profile: Profile
 }
+interface Crop {
+  left: number
+  right: number
+  top: number
+  bottom: 0
+}
 enum VideoCodec {
   h264 = "libx264",
   h265 = "libx265",
@@ -55,6 +62,7 @@ type transcodingSettings = {
   resolution: Resolution
   framerate: number
   rotation: number
+  crop: Crop
   videoCodec: VideoCodec
   videoCodecSettings: H264
 }
@@ -72,9 +80,10 @@ function App() {
   const [transcodingSettings, setTranscodingSettings] =
     useState<transcodingSettings>({
       format: FileFormat.mkv,
-      resolution: Resolution.fhd,
+      resolution: Resolution.fHD,
       framerate: 30,
       rotation: 0,
+      crop: { left: 0, right: 0, top: 0, bottom: 0 },
       videoCodec: VideoCodec.h264,
       videoCodecSettings: {
         crf: 18,
@@ -314,6 +323,54 @@ function App() {
     //   )
     // )
   }
+  function handleTranscodingSettings(event: any) {
+    // console.log(event.target.name)
+    // console.log(event.target.value)
+    // let updatedSetting = event.target.name
+    let updatedValue = event.target.value
+    // let updatedID = event.target.id
+    // console.log(updatedID)
+    setTranscodingSettings((prevTranscodingSetings) => {
+      if (event.target.name == "crop") {
+        switch (event.target.id) {
+          case "crop-left":
+            updatedValue = {
+              ...transcodingSettings.crop,
+              left: updatedValue,
+            }
+            break
+          case "crop-right":
+            updatedValue = {
+              ...transcodingSettings.crop,
+              right: updatedValue,
+            }
+            break
+          case "crop-top":
+            updatedValue = {
+              ...transcodingSettings.crop,
+              top: updatedValue,
+            }
+            break
+          case "crop-bottom":
+            updatedValue = {
+              ...transcodingSettings.crop,
+              bottom: updatedValue,
+            }
+            break
+
+          default:
+            break
+        }
+      }
+      return {
+        ...prevTranscodingSetings,
+        [event.target.name]: updatedValue,
+      }
+    })
+  }
+  useEffect(() => {
+    console.log(transcodingSettings)
+  }, [transcodingSettings])
   const ffmpegStatus = loaded ? (
     <>
       <p ref={messageRef}></p>
@@ -343,9 +400,9 @@ function App() {
   // }, [selectedFiles])
 
   // logging
-  useEffect(() => {
-    console.log(importedVideos)
-  }, [importedVideos])
+  // useEffect(() => {
+  //   console.log(importedVideos)
+  // }, [importedVideos])
 
   const fileList = importedVideos.map((video, index) => {
     return (
@@ -403,72 +460,108 @@ function App() {
         <video controls ref={videoPlayerRef}></video>
       </div>
       <div className="options">
-        <h4>Preset</h4>
-        <h4>Format</h4>
-        <select name="format" id="format">
-          <option value="same-as-source">Same as source</option>
-          <option value="mp4">MP4</option>
-          <option value="mkv">MKV</option>
-          <option value="webm">WebM</option>
-        </select>
-        <h4>Resolution</h4>
-        <select name="max-resolution" id="max-resolution">
-          <option value="same-as-source">Same as source</option>
-          <option value="4k">4K</option>
-          <option value="1080p">1080p</option>
-          <option value="720p">720p</option>
-        </select>
-        <h4>Framerate</h4>
-        <select name="framerate" id="framerate">
-          <option value="same-as-source">Same as source</option>
-          <option value="30">30</option>
-          <option value="60">60</option>
-          <option value="25">25</option>
-        </select>
-        <h4>Rotation</h4>
-        <select name="rotation" id="rotation">
-          <option value="0">None</option>
-          <option value="90">90</option>
-          <option value="180">180</option>
-          <option value="270">270</option>
-        </select>
-        <h4>Crop</h4>
-        <div id="crop">
-          <label htmlFor="crop-left">Left</label>
-          <input type="number" name="crop" id="crop-left" defaultValue={0} />
-          <br></br>
-          <label htmlFor="crop-right">Right</label>
-          <input type="number" name="crop" id="crop-right" defaultValue={0} />
-          <br></br>
-          <label htmlFor="crop-top">Top</label>
-          <input type="number" name="crop" id="crop-top" defaultValue={0} />
-          <br></br>
-          <label htmlFor="crop-bottom">Bottom</label>
-          <input type="number" name="crop" id="crop-bottom" defaultValue={0} />
-          <br></br>
-        </div>
-        <h4>Video Settings</h4>
-        <label htmlFor="codec">Codec</label>
-        <select name="codec" id="codec">
-          <option value={VideoCodec.h264}>H.264</option>
-          <option value={VideoCodec.h265}>H.265</option>
-        </select>
-        <label htmlFor="preset">Preset</label>
-        <select name="preset" id="preset">
-          {Object.keys(Preset).map((key) => (
-            <option value={key}>{key}</option>
-          ))}
-        </select>
-        <label htmlFor="profile">Profile</label>
-        <select name="profile" id="profile">
-          {Object.keys(Profile).map((key) => (
-            <>
-              <option value={key}>{key}</option>
-            </>
-          ))}
-        </select>
-        <h4>Audio Settings</h4>
-        <h4>Subtitle Settings</h4>
+        <form onChange={handleTranscodingSettings}>
+          <h4>Preset</h4>
+          <h4>Format</h4>
+          <select name="format" id="format">
+            {Object.entries(FileFormat).map(([key, value]) => (
+              <option value={key} key={key}>
+                {value}
+              </option>
+            ))}
+            {/* <option value="same">Same as source</option>
+            <option value="mp4">MP4</option>
+            <option value="mkv">MKV</option>
+            <option value="webm">WebM</option> */}
+          </select>
+          <h4>Resolution</h4>
+          <select name="max-resolution" id="max-resolution">
+            {Object.entries(Resolution).map(([key, value]) => (
+              <option value={key} key={key}>
+                {value}
+              </option>
+            ))}
+            {/* <option value="same">Same as source</option>
+            <option value="4k">4K</option>
+            <option value="1080p">1080p</option>
+            <option value="720p">720p</option> */}
+          </select>
+          <h4>Framerate</h4>
+          <select name="framerate" id="framerate">
+            <option value="same">Same as source</option>
+            <option value="30">30</option>
+            <option value="60">60</option>
+            <option value="25">25</option>
+          </select>
+          <h4>Rotation</h4>
+          <select name="rotation" id="rotation">
+            <option value="same">None</option>
+            <option value="90">90</option>
+            <option value="180">180</option>
+            <option value="270">270</option>
+            <option value="custom">Custom</option>
+            {/* {transcodingSettings.rotation.} */}
+          </select>
+          <h4>Crop</h4>
+          <div id="crop">
+            <label htmlFor="crop-left">Left</label>
+            <input
+              type="number"
+              name="crop"
+              id="crop-left"
+              defaultValue={transcodingSettings.crop.left}
+            />
+            <br></br>
+            <label htmlFor="crop-right">Right</label>
+            <input
+              type="number"
+              name="crop"
+              id="crop-right"
+              defaultValue={transcodingSettings.crop.right}
+            />
+            <br></br>
+            <label htmlFor="crop-top">Top</label>
+            <input
+              type="number"
+              name="crop"
+              id="crop-top"
+              defaultValue={transcodingSettings.crop.top}
+            />
+            <br></br>
+            <label htmlFor="crop-bottom">Bottom</label>
+            <input
+              type="number"
+              name="crop"
+              id="crop-bottom"
+              defaultValue={transcodingSettings.crop.left}
+            />
+            <br></br>
+          </div>
+          <h4>Video Settings</h4>
+          <label htmlFor="codec">Codec</label>
+          <select name="codec" id="codec">
+            <option value={VideoCodec.h264}>H.264</option>
+            <option value={VideoCodec.h265}>H.265</option>
+          </select>
+          <label htmlFor="preset">Preset</label>
+          <select name="preset" id="preset">
+            {Object.entries(Preset).map(([key, value]) => (
+              <option value={key} key={key}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="profile">Profile</label>
+          <select name="profile" id="profile">
+            {Object.entries(Profile).map(([key, value]) => (
+              <option value={key} key={key}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <h4>Audio Settings</h4>
+          <h4>Subtitle Settings</h4>
+        </form>
       </div>
       <div className="files-list">
         {/* <ul>
