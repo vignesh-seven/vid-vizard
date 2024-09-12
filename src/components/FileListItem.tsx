@@ -4,9 +4,15 @@ export default function FileListItem(props: any) {
   return (
     <div
       className="file-list-item"
-      style={props.selected ? { border: "5px solid blue" } : {}}
+      style={props.selected ? { backgroundColor: "blue" } : {}}
       // style={{ border: "5px solid blue" }}
     >
+      <img
+        src="./thumbnail.png"
+        alt="thumbnail"
+        onClick={props.handleSelectFile}
+      />
+
       <button
         style={props.selected ? { backgroundColor: "blue" } : {}}
         onClick={props.handleSelectFile}
@@ -16,10 +22,17 @@ export default function FileListItem(props: any) {
       </button>
       <button
         style={props.selected ? { backgroundColor: "blue" } : {}}
+        // onClick={}
+        className="download"
+      >
+        ⬇️
+      </button>
+      <button
+        style={props.selected ? { backgroundColor: "blue" } : {}}
         onClick={props.handleDeleteFile}
         className="close"
       >
-        X
+        ❌
       </button>
     </div>
   )
