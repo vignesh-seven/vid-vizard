@@ -1,6 +1,8 @@
+import { useRef } from "react"
 import "./FileListItem.css"
 
 export default function FileListItem(props: any) {
+  const downloadLinkRef = useRef<HTMLAnchorElement>(null)
   return (
     <div
       className="file-list-item"
@@ -12,7 +14,6 @@ export default function FileListItem(props: any) {
         alt="thumbnail"
         onClick={props.handleSelectFile}
       />
-
       <button
         style={props.selected ? { backgroundColor: "blue" } : {}}
         onClick={props.handleSelectFile}
@@ -20,13 +21,28 @@ export default function FileListItem(props: any) {
       >
         {props.fileName}
       </button>
-      <button
-        style={props.selected ? { backgroundColor: "blue" } : {}}
-        // onClick={}
-        className="download"
-      >
-        ⬇️
-      </button>
+      {props.transcodedURL ? (
+        <>
+          <button
+            style={props.selected ? { backgroundColor: "blue" } : {}}
+            onClick={() => {
+              downloadLinkRef.current?.click()
+            }}
+            className="download"
+          >
+            ⬇️
+          </button>
+          <a
+            href={props.transcodedURL}
+            download={props.name}
+            ref={downloadLinkRef}
+          >
+            Download
+          </a>
+        </>
+      ) : (
+        <></>
+      )}
       <button
         style={props.selected ? { backgroundColor: "blue" } : {}}
         onClick={props.handleDeleteFile}
