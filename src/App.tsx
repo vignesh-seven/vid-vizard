@@ -9,6 +9,7 @@ type importedVideo = {
   id: string
   file: File
   // selected: boolean
+  originalURL: string
   transcodedURL: string | null
 }
 enum FileFormat {
@@ -95,7 +96,7 @@ function App() {
     useState<transcodingSettings>({
       format: FileFormat.mkv,
       resolution: Resolution.fHD,
-      framerate: 30,
+      framerate: "30",
       rotation: 0,
       crop: { left: 0, right: 0, top: 0, bottom: 0 },
       videoCodec: VideoCodec.h264,
@@ -121,18 +122,18 @@ function App() {
     // ffmpeg.on("log", ({ message }) => {
     //   if (messageRef.current) messageRef.current.innerHTML = message
     // })
-    ffmpeg.on("log", ({ message }) => {
-      // if (messageRef.current) messageRef.current.innerHTML = message
-      console.log(message)
-    })
-    // Listen to progress event instead of log.
-    // ffmpeg.on("progress", ({ progress, time }) => {
-    //   if (!messageRef.current) return
-    //   messageRef.current.innerHTML = `${progress * 100} % (transcoded time: ${
-    //     time / 1000000
-    //   } s)`
-    //   console.log(`${progress * 100} % (transcoded time: ${time / 1000000} s)`)
+    // ffmpeg.on("log", ({ message }) => {
+    //   if (messageRef.current) messageRef.current.innerHTML = message
+    //   // console.log(message)
     // })
+    // Listen to progress event instead of log.
+    ffmpeg.on("progress", ({ progress, time }) => {
+      if (!messageRef.current) return
+      messageRef.current.innerHTML = `${progress * 100} % (transcoded time: ${
+        time / 1000000
+      } s)`
+      console.log(`${progress * 100} % (transcoded time: ${time / 1000000} s)`)
+    })
     // toBlobURL is used to bypass CORS issue, urls with the same
     // domain can be used directly.
     await ffmpeg.load({
@@ -210,107 +211,150 @@ function App() {
   //     console.error("Error during transcoding:", error)
   //   }
   // }
-  const transcodeVideo = async (
-    videoFiles: importedVideo[],
+  async function transcodeVideo(
+    videoFile: importedVideo,
     videoTranscodingSettings: transcodingSettings
-  ) =>
+  ) {
     // importedVideo: importedVideo,
     // transcodingSettings: transcodingSettings
-    {
-      if (videoFiles.length == 0) return console.log("No files in videoFiles")
-      for (const videoFile of videoFiles) {
-        try {
-          console.log(`transcode started for: ${videoFile.file.name}`)
-          const videoURL = URL.createObjectURL(videoFile.file)
-          const ffmpeg = ffmpegRef.current
-          const fileExtension = videoFile.file.name.split(".").at(-1)
-          const inputFileName = `${videoFile.id}.${fileExtension}`
+    // if (videoFiles.length == 0) return console.log("No files in videoFiles")
+    // for (const videoFile of videoFiles) {
+    try {
+      // console.log(`transcode started for: ${videoFile.file.name}`)
+      const videoURL = URL.createObjectURL(videoFile.file)
+      const ffmpeg = ffmpegRef.current
+      const fileExtension = videoFile.file.name.split(".").at(-1)
+      const inputFileName = `${videoFile.id}.${fileExtension}`
+      const outputFileName = `${videoFile.id}_transcoded.${fileExtension}`
+      console.log([videoURL, ffmpeg, fileExtension, inputFileName])
 
-          await ffmpeg.writeFile(inputFileName, await fetchFile(videoURL))
-          // ffmpeg -i input -c:v libx264 -preset slow -crf 22 -c:a copy output.mkv
+      await ffmpeg.writeFile(inputFileName, await fetchFile(videoURL))
+      // ffmpeg -i input -c:v libx264 -preset slow -crf 22 -c:a copy output.mkv
 
-          // preparing the ffmpeg command
-          const outputFileExtension = () => {
-            switch (videoTranscodingSettings.format) {
-              case FileFormat.mkv:
-                return "mkv"
-              case FileFormat.mp4:
-                return "mp4"
-              case FileFormat.webm:
-                return "webm"
-              default:
-                return fileExtension
-            }
-          }
-          const outputResolution = () => {
-            switch (videoTranscodingSettings.resolution) {
-              case Resolution.fHD:
-                return "-vf scale=1920:-1"
-              case Resolution.fourK:
-                return "-vf scale=3840:-1"
-              default:
-                return ""
-            }
-          }
-          const outputFramerate = () => {
-            switch (videoTranscodingSettings.framerate) {
-              case fps.film:
-                return `-vf fps=film`
-              case fps.ntsc:
-                return `-vf fps=ntsc`
-              case fps.ntsc_film:
-                return `-vf fps=ntsc_film`
-              case fps.pal:
-                return `-vf fps=pal`
-              default:
-                return ""
-            }
-          }
+      await ffmpeg.exec([
+        "-i",
+        inputFileName,
+        "-vf",
+        "scale=-1:480",
+        outputFileName,
+      ])
 
-          await ffmpeg.exec([
-            "-i",
-            `${videoFile.id}`,
-            "-c:v",
-            `${transcodingSettings.videoCodec}`,
-            "-preset",
-            `${transcodingSettings.videoCodecSettings.preset}`,
-            "-crf",
-            `${transcodingSettings.videoCodecSettings.crf}`,
-            "-c:a", // copy audio tracks without encoding
-            "copy",
+      const fileData = await ffmpeg.readFile(outputFileName)
+      const data = new Uint8Array(fileData as ArrayBuffer)
 
-            "-vf",
-            "scale=-1:480",
-            `output.mp4`,
-          ])
+      const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
+      const downloadURL = URL.createObjectURL(downloadBlob)
+      console.log("transcode complete")
+      return downloadURL
+      return null
 
-          const fileData = await ffmpeg.readFile("output.mp4")
-          const data = new Uint8Array(fileData as ArrayBuffer)
-
-          // if (videoPlayerRef.current) {
-          // const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
-          // const videoURL = URL.createObjectURL(videoBlob)
-          // videoPlayerRef.current.src = videoURL
-
-          // // Revoke the object URL after use
-          // videoPlayerRef.current.onloadeddata = () => {
-          //   URL.revokeObjectURL(videoURL)
-          // }
-
-          const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
-          const downloadURL = URL.createObjectURL(downloadBlob)
-          setDownloadLink(downloadURL)
-
-          // Revoke the object URL after use
-          URL.revokeObjectURL(downloadURL)
-          // }
-
-          console.log("transcode complete")
-        } catch (error) {
-          console.error("Error during transcoding:", error)
+      // preparing the ffmpeg command
+      const outputFileExtension = () => {
+        switch (videoTranscodingSettings.format) {
+          case FileFormat.mkv:
+            return "mkv"
+          case FileFormat.mp4:
+            return "mp4"
+          case FileFormat.webm:
+            return "webm"
+          default:
+            return fileExtension
         }
       }
+      const outputResolution = () => {
+        switch (videoTranscodingSettings.resolution) {
+          case Resolution.fHD:
+            return "-vf scale=1920:-1"
+          case Resolution.fourK:
+            return "-vf scale=3840:-1"
+          default:
+            return ""
+        }
+      }
+      const outputFramerate = () => {
+        switch (videoTranscodingSettings.framerate) {
+          case fps.film:
+            return `-vf fps=film`
+          case fps.ntsc:
+            return `-vf fps=ntsc`
+          case fps.ntsc_film:
+            return `-vf fps=ntsc_film`
+          case fps.pal:
+            return `-vf fps=pal`
+          default:
+            return ""
+        }
+      }
+
+      await ffmpeg.exec([
+        "-i",
+        `${videoFile.id}`,
+        "-c:v",
+        `${transcodingSettings.videoCodec}`,
+        "-preset",
+        `${transcodingSettings.videoCodecSettings.preset}`,
+        "-crf",
+        `${transcodingSettings.videoCodecSettings.crf}`,
+        "-c:a", // copy audio tracks without encoding
+        "copy",
+
+        "-vf",
+        "scale=-1:480",
+        `output.mp4`,
+      ])
+
+      // const fileData = await ffmpeg.readFile("output.mp4")
+      // const data = new Uint8Array(fileData as ArrayBuffer)
+
+      // if (videoPlayerRef.current) {
+      // const videoBlob = new Blob([data.buffer], { type: "video/mp4" })
+      // const videoURL = URL.createObjectURL(videoBlob)
+      // videoPlayerRef.current.src = videoURL
+
+      // // Revoke the object URL after use
+      // videoPlayerRef.current.onloadeddata = () => {
+      //   URL.revokeObjectURL(videoURL)
+      // }
+
+      // const downloadBlob = new Blob([data.buffer], { type: "video/mp4" })
+      // const downloadURL = URL.createObjectURL(downloadBlob)
+      // console.log("transcode complete")
+      // return downloadURL
+
+      // Revoke the object URL after use
+      // URL.revokeObjectURL(downloadURL)
+      // }
+    } catch (error) {
+      console.error("Error during transcoding:", error)
+      return null
     }
+    // }
+  }
+  async function transcodeSelectedVideos(videos: importedVideo[]) {
+    // console.log(selectedFiles)
+    for (const video of videos) {
+      const transcodedVideoURL = await transcodeVideo(
+        video,
+        transcodingSettings
+      )
+      setImportedVideos((prevImportedVideos) => {
+        return prevImportedVideos.map((oldVideo) => {
+          if (oldVideo.id == video.id) {
+            if (transcodedVideoURL && videoPlayerRef.current) {
+              videoPlayerRef.current.src = transcodedVideoURL
+            }
+            return {
+              ...oldVideo,
+              transcodedURL: transcodedVideoURL,
+            }
+            // return newVideo
+          } else {
+            return oldVideo
+          }
+        })
+      })
+    }
+  }
 
   //////////////////////////////////////////////////////
   /////////////////// ffmpeg ends //////////////////////
@@ -326,10 +370,12 @@ function App() {
   function addfileToImportedFiles(files: File[]) {
     if (!files) return
     const newImportedVideos = files.map((file) => {
+      const originalURL = URL.createObjectURL(file)
       const newImportedVideo: importedVideo = {
         id: fileNameToId(file.name),
         file: file,
         // selected: false,
+        originalURL: originalURL,
         transcodedURL: null,
       }
       return newImportedVideo
@@ -435,8 +481,8 @@ function App() {
 
   const ffmpegStatus = loaded ? (
     <>
-      <p ref={messageRef}></p>
       <button>Loaded</button>
+      <p ref={messageRef}></p>
     </>
   ) : (
     <button onClick={load}>Loading ffmpeg</button>
@@ -479,6 +525,7 @@ function App() {
         handleSelectFile={(e: MouseEvent | null) => {
           handleSelectFile(e, video)
         }}
+        transcodedURL={video.transcodedURL}
       />
     )
   })
@@ -500,7 +547,7 @@ function App() {
           Select files
         </button>
         <button
-          // onClick={transcodeSelected}
+          onClick={() => transcodeSelectedVideos(selectedFiles)}
           id="render-selected-button"
           disabled={!loaded}
         >
@@ -508,7 +555,7 @@ function App() {
         </button>
         <button
           id="render-all-button"
-          onClick={transcodeVideo}
+          // onClick={transcodeVideo}
           disabled={!loaded}
         >
           Render All

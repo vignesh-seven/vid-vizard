@@ -23,7 +23,7 @@ export default function FileListItem(props: any) {
       </button>
       {props.transcodedURL ? (
         <>
-          <button
+          {/* <button
             style={props.selected ? { backgroundColor: "blue" } : {}}
             onClick={() => {
               downloadLinkRef.current?.click()
@@ -31,11 +31,12 @@ export default function FileListItem(props: any) {
             className="download"
           >
             ⬇️
-          </button>
+          </button> */}
           <a
             href={props.transcodedURL}
             download={props.name}
             ref={downloadLinkRef}
+            // className="hidden"
           >
             Download
           </a>
